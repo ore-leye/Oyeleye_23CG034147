@@ -1,4 +1,7 @@
-import os
+import osgit add app.py
+git commit -m "quiet logs"
+git push
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Hide TensorFlow noise
 import base64
 import sqlite3
 import cv2
