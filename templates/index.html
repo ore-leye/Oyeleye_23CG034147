@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Emotion Detector</title>
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: auto; padding: 20px; background: #f0f8ff; }
+        h1 { text-align: center; color: #333; }
+        form { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        input, select, button { padding: 10px; margin: 10px 0; width: 100%; box-sizing: border-box; }
+        button { background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #45a049; }
+        #webcam_section, #upload_section { display: none; margin-top: 20px; }
+        #video { border: 2px solid #ddd; border-radius: 10px; }
+        #canvas { display: none; }
+        #result { display: none; text-align: center; background: #e8f5e8; padding: 20px; border-radius: 10px; margin: 20px 0; }
+        #result_img { max-width: 300px; border-radius: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #4CAF50; color: white; }
+        img { border-radius: 5px; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Emotion Detection App</h1>
+    <form id="emotionForm">
+        <input type="text" id="name" placeholder="Enter your name *" required>
+        <select id="mode" onchange="toggleMode()">
+            <option value="">Select Mode</option>
+            <option value="upload">Upload Image (Offline)</option>
+            <option value="live">Live Webcam (Online)</option>
+        </select>
+        <div id="upload_section">
+            <input type="file" id="imageFile" accept="image/*">
+        </div>
+        <div id="webcam_section">
+            <video id="video" width="320" height="240" autoplay muted></video><br>
+            <canvas id="canvas" width="320" height="240"></canvas>
+            <button type="button" id="captureBtn">Capture Photo</button>
+        </div>
+        <button type="submit" id="predictBtn" style="display:none;">Detect Emotion!</button>
+    </form>
+
+    <div id="result">
+        <img id="resultImg">
+        <h2 id="resultEmotion"></h2>
+        <p>Confidence: <span id="resultConf"></span></p>
+        <button onclick="hideResult()">New Detection</button>
+    </div>
+
+    <h3>History (Last 50)</h3>
+    <table>
+        <thead><tr><th>Name</th><th>Image</th><th>Emotion</th><th>Conf %</th><th>Mode</th><th>Time</th></tr></thead>
+        <tbody id="historyTbody"></tbody>
+    </table>
+
+    <script>
+        let stream;
+        function toggleMode() {
+            const mode = document.getElementById('mode').value;
+            document.getElementById('upload_section').style.display = mode === 'upload' ? 'block' : 'none';
+            document.getElementById('webcam_section').style.display = mode === 'live' ? 'block' : 'none';
+            document.getElementById('predictBtn').style.display = mode ? 'block' : 'none';
+            if (mode === 'live') startWebcam();
+        }
+        async function startWebcam() {
+            if (stream) return;
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            document.getElementById('video').srcObject = stream;
+        }
+        document.getElementById('imageFile').onchange = (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (ev) => sendPrediction(ev.target.result, 'upload');
+            reader.readAsDataURL(file);
+        };
+        document.getElementById('captureBtn').onclick = () => {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(document.getElementById('video'), 0, 0);
+            sendPrediction(canvas.toDataURL('image/jpeg'), 'live');
+        };
+        function sendPrediction(imgData, mode) {
+            const formData = new FormData();
+            formData.append('name', document.getElementById('name').value);
+            formData.append('mode', mode);
+            formData.append('image', imgData);
+            fetch('/predict', { method: 'POST', body: formData })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.error) alert('Error: ' + data.error);
+                    else {
+                        document.getElementById('resultEmotion').textContent = data.emotion;
+                        document.getElementById('resultConf').textContent = data.confidence + '%';
+                        document.getElementById('resultImg').src = '/uploads/' + data.image.split('/').pop();
+                        document.getElementById('result').style.display = 'block';
+                        loadHistory();
+                    }
+                });
+        }
+        function hideResult() {
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('emotionForm').reset();
+            toggleMode();
+        }
+        function loadHistory() {
+            fetch('/history_data').then(r => r.json()).then(rows => {
+                let html = '';
+                rows.forEach(row => {
+                    html += `<tr>
+                        <td>${row[0]}</td>
+                        <td><img src="/uploads/${row[1].split('/').pop()}" width="50" height="50"></td>
+                        <td>${row[2]}</td>
+                        <td>${Math.round(row[3])}%</td>
+                        <td>${row[4].toUpperCase()}</td>
+                        <td>${new Date(row[5]).toLocaleString()}</td>
+                    </tr>`;
+                });
+                document.getElementById('historyTbody').innerHTML = html;
+            });
+        }
+        loadHistory();
+    </script>
+</body>
+</html>

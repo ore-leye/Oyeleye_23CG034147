@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+uploads/
+emotions.db
+fer2013.csv
