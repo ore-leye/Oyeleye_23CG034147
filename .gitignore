@@ -1,5 +1,58 @@
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
 *.pyc
-uploads/
+
+# Virtual Environments
+venv/
+env/
+.venv/
+test-env/
+ENV/
+
+# Database
 emotions.db
+*.db
+*.sqlite3
+
+# Datasets (Large Files)
 fer2013.csv
+*.csv
+data/
+dataset/
+datasets/
+
+# Uploads (User Images)
+uploads/
+temp_uploads/
+static/uploads/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.code-workspace
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Model Files (Optional: if > 25 MB)
+*.h5
+*.pkl
+*.pth
+*.h5
+models/large_*.h5
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Environment Variables
+.env
+.env.local
