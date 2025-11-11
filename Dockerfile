@@ -10,4 +10,4 @@ COPY . .
 
 EXPOSE $PORT
 
-CMD ["gunicorn", "--bind", "0.0.0.0:$PORT", "--workers", "1", "--preload", "--timeout", "300", "app:app"]
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:$PORT --workers 1 --preload --timeout 300 app:app"]
