@@ -4,7 +4,10 @@ services:
     env: python
     region: oregon
     plan: free
-    buildCommand: python3.11 -m pip install -r requirements.txt
+    buildCommand: |
+      python -m pip install --upgrade pip
+      apt-get update && apt-get install -y python3.11 python3.11-venv python3.11-dev
+      python3.11 -m pip install -r requirements.txt
     startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --preload --timeout 300
     envVars:
       - key: PYTHON_VERSION
