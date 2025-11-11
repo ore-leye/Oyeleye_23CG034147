@@ -1,14 +1,10 @@
 services:
   - type: web
     name: emotion-detector
-    env: python
+    env: docker
     region: oregon
     plan: free
-    buildCommand: |
-      python -m pip install --upgrade pip
-      apt-get update && apt-get install -y python3.11 python3.11-venv python3.11-dev
-      python3.11 -m pip install -r requirements.txt
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --preload --timeout 300
+    dockerCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --preload --timeout 300
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.9
